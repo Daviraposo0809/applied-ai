@@ -1,0 +1,773 @@
+{
+  "name": "Agente Bot BrandLovers",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        20,
+        360
+      ],
+      "id": "a415af09-a73d-458e-91d7-9844b97eb54c",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YsormCQ6OqWCZwM4",
+          "name": "OpenAi account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Perfil:\nVocê é o BrandAI, a AI da BrandLovers. Seu principal objetivo é auxiliar o usuário realizando a verificação do seu acesso por meio do email, antes de fornecer qualquer informação sobre campanhas ou demais conteúdos. Você tem autonomia para navegar entre as bases de dados e garantir que apenas as campanhas associadas à marca do usuário sejam retornadas.\n\nInstruções: \n\nVocê deve verificar o email do usuario e suas marcas utilizando a memoria: \"base\"\n\nFluxo de Atendimento:\n\t1.\tCumprimento e Apresentação:\n\t•\tAo iniciar o atendimento, envie:\n“Olá! Eu sou o BrandAI. Como posso te ajudar hoje? 😊”\n\t•\tObservação: Garanta que o email do usuário será solicitado antes de fornecer qualquer outra informação.\n\t2.\tSolicitação do Email:\n\t•\tEm seguida, pergunte:\n“Para eu te ajudar melhor, poderia me informar o seu email?”\n\t3.\tVerificação do Email na Base:\n\t•\tUtilize a consulta abaixo no banco de dados \"Base\" para verificar se o email do usuário (obtido através de {{ $json.chatInput }}) consta na base “usuarios”:\n\nSELECT * FROM \"usuarios\" WHERE email = '{{ $json.chatInput }}';\n\n\t•\tEssa consulta determinará se o email informado está cadastrado.\n\n\t4.\tFluxo Positivo – Email Encontrado:\n\t•\tSe o email estiver cadastrado na base, responda:\n“Perfeito! Seu email está cadastrado.”\n\t•\tEm seguida, personalize a interação utilizando o nome do usuário e encaminhe para a consulta das campanhas:\n“Olá [Nome], qual campanha você quer ver hoje?”\n\t•\tAtenção: Ao responder as dúvidas e fornecer informações sobre campanhas, navegue nas bases de dados “usuarios” e “marcas” para retornar somente as campanhas à qual o usuário está atrelado. Garanta que nenhuma outra campanha seja exibida.\n\t5.\tFluxo Negativo – Email Não Encontrado:\n\t•\tSe o email não for encontrado na base, envie a seguinte mensagem:\n“Olá {nome_usuario},\nVi que você não tem um email de acesso na BrandLovers, não tem problema.\nÉ só você se cadastrar no link abaixo!\n👉 https://brandlovers.com.br/cadastro\nSeja bem-vindo à BrandLovers! 💜”\n\n6. Quando você for pergutando sobre o valor, faça a seguinte busca; \n\nNunca quebre a linha diretamente na mensagem. Sempre que quiser representar uma nova linha, use \\n."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        140,
+        60
+      ],
+      "id": "330d7b82-815f-4eb4-977a-c03bd94eba12",
+      "name": "Email Gather"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', `Use essa ferramenta quando precisar buscar o email da creator no banco de dados`, 'string') }}",
+          "mode": "name"
+        },
+        "limit": "=1",
+        "where": {
+          "values": [
+            {
+              "column": "=email",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        340,
+        360
+      ],
+      "id": "69768b62-bf95-478d-8d89-7e4e34b2dd06",
+      "name": "base",
+      "credentials": {
+        "postgres": {
+          "id": "1YTu6O9OvWqtTTGk",
+          "name": "Postgres account 4"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        200,
+        380
+      ],
+      "id": "fa982819-1b3c-4f9d-aaba-3cd81df9854a",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', `Use essa ferramenta quando precisar buscar a capanha da creator no banco de dados.\na campanha do creator está na tabela marcas. Na tabela usuarios tem a coluna email que você pode usar para pegar a coluna marca, que tem o id da marca que aí sim na tabela marcas você busca por esse id e pega a campanha e as infos relacionadas a ela`, 'string') }}",
+          "mode": "name"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        360
+      ],
+      "id": "770865db-2add-41a3-a1bc-0f530fd23802",
+      "name": "base1",
+      "credentials": {
+        "postgres": {
+          "id": "1YTu6O9OvWqtTTGk",
+          "name": "Postgres account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fcf0d3ef-595a-4bbc-b51b-dc04a3f2a3c6",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        60
+      ],
+      "id": "4b3d550a-4525-4cd3-8b95-747592f64d4f",
+      "name": "Webhook",
+      "webhookId": "fcf0d3ef-595a-4bbc-b51b-dc04a3f2a3c6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d367a512-d93e-4638-8a6e-03a69e1445d9",
+              "name": "chatInput",
+              "value": "={{ $json.body.data.message._data.body }}",
+              "type": "string"
+            },
+            {
+              "id": "ee7cd3dc-56f3-4158-a6d4-bb410b3c8184",
+              "name": "sessionId",
+              "value": "={{ $json.body.data.message.from }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        60
+      ],
+      "id": "f062a9a3-6191-431c-b504-832c6fba4b68",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://waapi.app/api/v1/instances/58924/client/action/send-message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "authorization",
+              "value": "Bearer Okg1mEFeAjRbWXzsoYzgG8s2BeHb0vnNRqqChHGM5c6f073c"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $('Webhook').first().json.body.data.message.from }}\",\n  \"message\": \"{{ $json.message }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        60
+      ],
+      "id": "6e076ccd-f3b5-4b28-803e-6b236ba24693",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $input.first().json.output;\nconst escapedMessage = message.replace(/\\n/g, '');\n\nreturn {\n  json: {\n    message: escapedMessage\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        60
+      ],
+      "id": "783c71f2-a657-47ad-8dda-f5d75b9d1ed4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Você é o BrandAI, a inteligência artificial da BrandLovrs. Seu principal objetivo é auxiliar o usuário com informações sobre campanhas, creators e demais conteúdos, apenas após verificar o acesso do usuário por meio do seu e-mail.\n\nBases disponíveis:\n\nVocê pode consultar as seguintes bases de dados:\n\n'usuarios': contém os dados essenciais do usuário com as colunas id, nome, email, numero, marcas e cache.\n\n'marcas': contém os dados das marcas/campanhas com as colunas id, nome, link, descricao.\n\nRegras:\n\nPara dúvidas gerais (como prazos de pagamento, cupons ou como conseguir mais campanhas), a verificação de e-mail não é necessária. Utilize diretamente o FAQ abaixo.\n\nPara qualquer informação sobre campanhas, creators ou valores de cache:\n\nVerifique se o e-mail informado está na base 'usuarios'.\n\nAcesse a base 'marcas' e retorne apenas informações relacionadas à(s) marca(s) associada(s) ao usuário, conforme o campo 'marcas' da tabela 'usuarios'.\n\nEm nenhuma hipótese retorne dados de marcas ou campanhas que não estejam vinculadas ao usuário verificado.\n\nSempre que for informar uma campanha, inclua o valor de cache do usuário, disponível na base 'usuarios'.\n\nUtilize os campos 'link' e 'descricao' da campanha para enriquecer suas respostas.\n\nQuando for perguntado sobre valores, utilize os dados da base, respeitando sempre as permissões e campanhas associadas ao usuário.\n\nFluxo de atendimento:\n\nCumprimento e apresentação:\nMensagem inicial:\n\"Olá. Eu sou o BrandAI. Como posso te ajudar hoje?\"\n\nSe for uma dúvida geral (pagamento, cupons, novas campanhas):\nUtilize o FAQ diretamente, sem solicitar o e-mail.\n\nSe a solicitação for sobre campanhas, creators ou valores:\nSolicite o e-mail com a seguinte mensagem:\n\"Para eu te ajudar melhor, poderia me informar o seu e-mail?\"\n\nVerificação do e-mail na base:\nExecute a seguinte consulta:\nSELECT * FROM \"usuarios\" WHERE email = '{{ $json.chatInput }}';\n\nSe o e-mail for encontrado na base:\n\"Perfeito. Seu e-mail está cadastrado.\"\n\"Olá [Nome], qual campanha você quer ver hoje?\"\n\nQuando for informar uma campanha:\n\"Você está associado à campanha [Nome da campanha].\nAqui está o link: [link].\nDescrição: [descricao].\nSeu cache nesta campanha é de R$ [valor do cache].\"\n\nSe o e-mail não estiver cadastrado:\n\"Olá [nome_usuario],\nVerifiquei que você não possui um e-mail de acesso na BrandLovers.\nPara participar, faça seu cadastro no link: https://brandlovers.com.br/cadastro\nSeja bem-vindo à BrandLovers.\"\n\nFAQ (consulte sempre que necessário):\n\nQuanto tempo para cair o pagamento?\nResposta: Dois dias após a postagem do conteúdo.\n\nComo consigo mais campanhas?\nResposta: Mantenha o app atualizado para as marcas terem visibilidade.\n\nComo faço para ter meu cupom de desconto?\nResposta: Acesse o app, vá até a aba \"Cupons\", selecione a marca desejada e gere o seu cupom."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        40,
+        700
+      ],
+      "id": "acf0eadb-7e20-4d79-94df-66138d5e7f6e",
+      "name": "Email Gather1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', `Use essa ferramenta quando precisar buscar o email da creator no banco de dados`, 'string') }}",
+          "mode": "name"
+        },
+        "limit": "=1",
+        "where": {
+          "values": [
+            {
+              "column": "=email",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        920
+      ],
+      "id": "50095abd-93ea-456f-9051-3b654b843a51",
+      "name": "base2",
+      "credentials": {
+        "postgres": {
+          "id": "1YTu6O9OvWqtTTGk",
+          "name": "Postgres account 4"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        1000
+      ],
+      "id": "ffa4ddb6-b399-4a44-a398-450c992be92a",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', `Use essa ferramenta quando precisar buscar a capanha da creator no banco de dados.\na campanha do creator está na tabela marcas. Na tabela usuarios tem a coluna email que você pode usar para pegar a coluna marca, que tem o id da marca que aí sim na tabela marcas você busca por esse id e pega a campanha e as infos relacionadas a ela`, 'string') }}",
+          "mode": "name"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        360,
+        920
+      ],
+      "id": "c9df3422-fdfe-4837-8774-f07e2e8018ba",
+      "name": "base3",
+      "credentials": {
+        "postgres": {
+          "id": "1YTu6O9OvWqtTTGk",
+          "name": "Postgres account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -180,
+        700
+      ],
+      "id": "8a05895b-019b-4bc0-9320-5f5db44368bf",
+      "name": "When chat message received",
+      "webhookId": "a2da4e3e-acfb-44dd-8514-26158ca2f5f0"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -60,
+        980
+      ],
+      "id": "b6cb8801-50d9-40b5-932b-f5268808a153",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "DPvT73AtrulBbpfI",
+          "name": "OpenAi account 33"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eda14d3f-54e7-4cdc-8560-678c8899b8d6",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        700
+      ],
+      "id": "7cdeec90-df7e-4287-9f23-077427002a35",
+      "name": "Result"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "linktech.app.n8n.cloud",
+            "user-agent": "WaAPI Webhook User Agent",
+            "content-length": "2739",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "95.216.169.109",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "FI",
+            "cf-ray": "92ddd9b7c0d94e19-HEL",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "95.216.169.109, 162.158.238.200",
+            "x-forwarded-host": "linktech.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-11-cb7f6dc87-4tgl8",
+            "x-is-trusted": "yes",
+            "x-real-ip": "95.216.169.109",
+            "x-waapi-hmac": "df1d67bf68d4aa43b50351bc1f0a526c9c66dae7d4a8cbdbd9bf129c90b33537",
+            "x-waapi-instance-id": "58452",
+            "x-waapi-request-id": "c79eff2a-6f77-4f9b-975b-3cee1024805c"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "message",
+            "instanceId": "58452",
+            "data": {
+              "message": {
+                "_data": {
+                  "id": {
+                    "fromMe": false,
+                    "remote": "553197520020@c.us",
+                    "id": "3EB09B7BDBBFADFB8FF471",
+                    "_serialized": "false_553197520020@c.us_3EB09B7BDBBFADFB8FF471"
+                  },
+                  "viewed": false,
+                  "body": "brendabrandinglebbe@gmail.com",
+                  "type": "chat",
+                  "t": 1744242035,
+                  "notifyName": "kevin",
+                  "from": "553197520020@c.us",
+                  "to": "5518996559050@c.us",
+                  "ack": 1,
+                  "invis": false,
+                  "isNewMsg": true,
+                  "star": false,
+                  "kicNotified": false,
+                  "recvFresh": true,
+                  "isFromTemplate": false,
+                  "thumbnail": null,
+                  "pollInvalidated": false,
+                  "isSentCagPollCreation": false,
+                  "latestEditMsgKey": null,
+                  "latestEditSenderTimestampMs": null,
+                  "mentionedJidList": [],
+                  "groupMentions": [],
+                  "isEventCanceled": false,
+                  "eventInvalidated": false,
+                  "isVcardOverMmsDocument": false,
+                  "hasReaction": false,
+                  "ephemeralSettingTimestamp": 1744237832,
+                  "disappearingModeInitiator": "chat",
+                  "disappearingModeTrigger": "chat_settings",
+                  "disappearingModeInitiatedByMe": false,
+                  "viewMode": "VISIBLE",
+                  "messageSecret": [
+                    37,
+                    249,
+                    223,
+                    120,
+                    237,
+                    21,
+                    235,
+                    38,
+                    114,
+                    64,
+                    210,
+                    73,
+                    17,
+                    254,
+                    203,
+                    140,
+                    60,
+                    76,
+                    63,
+                    190,
+                    108,
+                    234,
+                    164,
+                    211,
+                    111,
+                    80,
+                    81,
+                    163,
+                    28,
+                    149,
+                    159,
+                    121
+                  ],
+                  "inviteGrpType": "DEFAULT",
+                  "productHeaderImageRejected": false,
+                  "lastPlaybackProgress": 0,
+                  "isDynamicReplyButtonsMsg": false,
+                  "isCarouselCard": false,
+                  "parentMsgId": null,
+                  "callSilenceReason": null,
+                  "isVideoCall": false,
+                  "callDuration": null,
+                  "callParticipants": null,
+                  "isMdHistoryMsg": false,
+                  "stickerSentTs": 0,
+                  "isAvatar": false,
+                  "lastUpdateFromServerTs": 0,
+                  "invokedBotWid": null,
+                  "bizBotType": null,
+                  "botResponseTargetId": null,
+                  "botPluginType": null,
+                  "botPluginReferenceIndex": null,
+                  "botPluginSearchProvider": null,
+                  "botPluginSearchUrl": null,
+                  "botPluginSearchQuery": null,
+                  "botPluginMaybeParent": false,
+                  "botReelPluginThumbnailCdnUrl": null,
+                  "botMsgBodyType": null,
+                  "reportingTokenInfo": {
+                    "reportingToken": [
+                      90,
+                      155,
+                      194,
+                      49,
+                      112,
+                      111,
+                      248,
+                      204,
+                      150,
+                      178,
+                      61,
+                      188,
+                      1,
+                      170,
+                      86,
+                      178
+                    ],
+                    "version": 1,
+                    "reportingTag": [
+                      1,
+                      5,
+                      62,
+                      59,
+                      62,
+                      242,
+                      113,
+                      241,
+                      45,
+                      212,
+                      218,
+                      144,
+                      146,
+                      70,
+                      20,
+                      224,
+                      249,
+                      244,
+                      87,
+                      68
+                    ]
+                  },
+                  "requiresDirectConnection": null,
+                  "bizContentPlaceholderType": null,
+                  "hostedBizEncStateMismatch": false,
+                  "senderOrRecipientAccountTypeHosted": false,
+                  "placeholderCreatedWhenAccountIsHosted": false,
+                  "links": [
+                    {
+                      "link": "mailto:brendabrandinglebbe@gmail.com",
+                      "isSuspicious": false
+                    }
+                  ]
+                },
+                "id": {
+                  "fromMe": false,
+                  "remote": "553197520020@c.us",
+                  "id": "3EB09B7BDBBFADFB8FF471",
+                  "_serialized": "false_553197520020@c.us_3EB09B7BDBBFADFB8FF471"
+                },
+                "ack": 1,
+                "hasMedia": false,
+                "body": "brendabrandinglebbe@gmail.com",
+                "type": "chat",
+                "timestamp": 1744242035,
+                "from": "553197520020@c.us",
+                "to": "5518996559050@c.us",
+                "deviceType": "android",
+                "forwardingScore": 0,
+                "isStatus": false,
+                "isStarred": false,
+                "fromMe": false,
+                "hasQuotedMsg": false,
+                "hasReaction": false,
+                "vCards": [],
+                "mentionedIds": [],
+                "groupMentions": [],
+                "isGif": false,
+                "links": [
+                  {
+                    "link": "mailto:brendabrandinglebbe@gmail.com",
+                    "isSuspicious": false
+                  }
+                ]
+              },
+              "media": null
+            }
+          },
+          "webhookUrl": "https://linktech.app.n8n.cloud/webhook/fcf0d3ef-595a-4bbc-b51b-dc04a3f2a3c6",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Gather",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Gather": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Gather",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Email Gather",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "base1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Gather",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Email Gather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Gather1": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "base2": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Gather1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Email Gather1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "base3": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Gather1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Email Gather1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Gather1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ff076542-274a-40b3-92b4-fc30c376ca1d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8327181bf8ea62340600b3ae4ca86492534f0ba868c9ce1479915683578b80fd"
+  },
+  "id": "Ab1xwvpcR9G18wy8",
+  "tags": []
+}
